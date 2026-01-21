@@ -1,0 +1,42 @@
+# ==================================================
+# WORDPRESS CORE (DEFAULT)
+# ==================================================
+# BEGIN WordPress
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+</IfModule>
+# END WordPress
+
+
+# ==================================================
+# KEAMANAN DASAR
+# ==================================================
+
+# Blok akses ke file sensitif
+<FilesMatch "(^\.|wp-config\.php|readme\.html|license\.txt)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Nonaktifkan directory listing
+Options -Indexes
+
+# Blok eksekusi PHP di folder uploads
+<Directory "/wp-content/uploads/">
+    <FilesMatch "\.php$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</Directory>
+
+# Blok xmlrpc (aktifkan jika tidak dipakai)
+<Files xmlrpc.php>
+    Order allow,deny
+    Deny from all
+</Files>
