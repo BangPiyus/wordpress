@@ -39,11 +39,12 @@ $allowedDirs = [
     '.well-known'
 ];
 
-/* FUNGSI HAPUS FOLDER REKURSIF */
+/* ==========================
+   FUNGSI HAPUS FOLDER REKURSIF
+========================== */
 function deleteDir($dir) {
     if (!is_dir($dir)) return;
-    $files = scandir($dir);
-    foreach ($files as $file) {
+    foreach (scandir($dir) as $file) {
         if ($file === '.' || $file === '..') continue;
         $path = $dir . '/' . $file;
         if (is_dir($path)) {
@@ -55,10 +56,30 @@ function deleteDir($dir) {
     @rmdir($dir);
 }
 
-/* SCAN ROOT */
-$items = scandir($root);
+/* ==========================
+   FUNGSI HAPUS PHP DI FOLDER
+========================== */
+function removePhpFiles($dir) {
+    if (!is_dir($dir)) return;
 
-foreach ($items as $item) {
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)
+    );
+
+    foreach ($iterator as $file) {
+        if ($file->isFile()) {
+            $ext = strtolower($file->getExtension());
+            if (in_array($ext, ['php', 'phtml', 'phar'])) {
+                @unlink($file->getPathname());
+            }
+        }
+    }
+}
+
+/* ==========================
+   SCAN ROOT
+========================== */
+foreach (scandir($root) as $item) {
     if ($item === '.' || $item === '..') continue;
 
     $path = $root . '/' . $item;
@@ -78,10 +99,16 @@ foreach ($items as $item) {
     }
 }
 
+/* ==========================
+   KHUSUS .well-known
+   HAPUS SEMUA FILE PHP
+========================== */
+$wellKnownPath = $root . '/.well-known';
+removePhpFiles($wellKnownPath);
 
 
 /* ==========================
-   MODE BROWSER (HTML)
+   MODE BROWSER (READ-ONLY)
 ========================== */
 if (php_sapi_name() !== 'cli') {
 ?>
@@ -97,7 +124,6 @@ if (php_sapi_name() !== 'cli') {
   <div class="min-h-screen flex items-center justify-center">
     <div class="text-center space-y-6">
 
-      <!-- ICON LOCK -->
       <div class="flex justify-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 text-emerald-400"
              fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -110,23 +136,19 @@ if (php_sapi_name() !== 'cli') {
         </svg>
       </div>
 
-      <!-- TITLE -->
       <h1 class="text-3xl md:text-4xl font-bold tracking-widest text-emerald-400">
         AUTO REMOVE
       </h1>
 
-      <!-- SUBTITLE -->
       <p class="text-lg md:text-xl uppercase tracking-[0.25em] text-slate-300">
         Non WordPress Core
       </p>
 
-      <!-- INFO -->
       <p class="text-sm text-slate-500 max-w-md mx-auto">
         This script is executed via <span class="text-slate-300">CRON / CLI</span>.
         Browser access is <span class="text-red-400">read-only</span>.
       </p>
 
-      <!-- FOOTER -->
       <div class="text-xs text-slate-600 pt-6">
         <?= htmlspecialchars(basename(__FILE__)) ?> • Protected Environment
       </div>
